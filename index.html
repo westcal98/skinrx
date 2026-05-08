@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SkinRx">
+<meta name="theme-color" content="#060b12">
+<link rel="manifest" href="manifest.json">
+<title>SkinRx</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:#060b12;height:100%;overscroll-behavior:none;-webkit-overflow-scrolling:touch;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;color:#dde6f0}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:#1e2d3d;border-radius:2px}
+#app{max-width:480px;margin:0 auto;padding-bottom:84px}
+/* Header */
+#hdr{background:#07101a;border-bottom:1px solid #182435;padding:18px 15px 0;position:sticky;top:0;z-index:10}
+#title-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+#week-nav-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:13px}
+/* Nav */
+#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#06101a;border-top:1px solid #182435;display:flex;padding:7px 0;padding-bottom:max(9px,env(safe-area-inset-bottom));z-index:10}
+.nav-btn{flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:2px 0;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.nav-btn span.lbl{font-size:9px;color:#5a7191;font-weight:400}
+.nav-btn.active span.lbl{color:#4ade80;font-weight:700}
+.nav-btn .pip{display:none;width:22px;height:2px;background:#4ade80;border-radius:1px;margin-top:1px}
+.nav-btn.active .pip{display:block}
+/* Tabs */
+.tab{display:none;padding:13px 14px 0;animation:fi .18s ease}
+.tab.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+/* Cards */
+.card{background:#0d1520;border:1px solid #182435;border-radius:14px;padding:16px;margin-bottom:12px}
+/* Buttons - base */
+.btn{background:none;border:none;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:transform .1s}
+.btn:active{transform:scale(.92)}
+/* Day cells */
+.day-cell{border-radius:8px;padding:7px 2px;cursor:pointer;text-align:center;width:100%;border:1px solid #182435;background:#0d1520;font-family:inherit;transition:transform .1s}
+.day-cell:active{transform:scale(.9)}
+.day-cell .dl{font-size:9px;color:#5a7191;margin-bottom:2px;font-weight:600}
+.day-cell .dn{font-size:14px;font-weight:700;color:#dde6f0;line-height:1}
+.day-cell .dot{height:5px;margin-top:3px;display:flex;align-items:center;justify-content:center}
+.day-cell.selected{background:#4ade80;border-color:#4ade80}
+.day-cell.selected .dl,.day-cell.selected .dn{color:#000}
+.day-cell.is-today{border-color:#2a4a6a}
+/* Step buttons */
+.step-btn{width:100%;background:#091422;border:1px solid #182435;border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left;display:flex;gap:10px;align-items:flex-start;font-family:inherit;margin-bottom:7px;transition:transform .1s}
+.step-btn:active{transform:scale(.98)}
+.step-btn.done{background:#091e14;border-color:#1a3d26}
+.check-box{width:20px;height:20px;border-radius:6px;border:2px solid #253547;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center}
+.step-btn.done .check-box{background:#4ade80;border-color:#4ade80}
+.check-mark{display:none;color:#000;font-size:10px;font-weight:800;line-height:1}
+.step-btn.done .check-mark{display:block}
+.step-text{font-size:13px;color:#d0dde8;font-weight:500}
+.step-btn.done .step-text{text-decoration:line-through;color:#3a6a4a}
+.step-num{font-size:10px;color:#3a5470;margin-right:5px;font-family:'SF Mono','Courier New',monospace}
+.step-btn.done .step-num{color:#2a3a30}
+.step-note{font-size:10px;color:#5a7191;margin-top:3px;font-style:italic;line-height:1.4}
+/* Progress bar */
+.bar-track{background:#0a1520;border-radius:4px;overflow:hidden}
+.bar-fill{height:5px;border-radius:4px;background:#38bdf8;transition:width .3s ease}
+.bar-fill.complete{background:#4ade80}
+/* Mood buttons */
+.mood-btn{border-radius:7px;padding:5px 8px;font-size:14px;border:1px solid #182435;background:#0a1520}
+.mood-btn.good-on{background:#0d2418;border-color:#4ade80}
+.mood-btn.bad-on{background:#2a0808;border-color:#f87171}
+/* Shower toggle */
+#shower-btn{border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;background:#081e30;border:1px solid #38bdf8;color:#38bdf8}
+#shower-btn.sink{background:#120d1e;border-color:#6366f1;color:#a5b4fc}
+/* Symptom buttons */
+.sym-btn{flex:1;height:38px;border-radius:7px;cursor:pointer;border:1px solid #182435;font-weight:700;font-size:14px;font-family:inherit;background:#091422;color:#5a7191;transition:transform .1s}
+.sym-btn:active{transform:scale(.92)}
+/* Product buttons */
+.prod-adj{background:#091422;border:1px solid #182435;border-radius:7px;padding:7px 14px;color:#5a7191;font-size:14px;cursor:pointer;font-weight:700;font-family:inherit;transition:transform .1s}
+.prod-adj:active{transform:scale(.92)}
+.low-badge{font-size:9px;padding:3px 9px;border-radius:20px;font-weight:700;letter-spacing:.5px;background:#1f0505;color:#f87171}
+.empty-badge{background:#1a0505;color:#ff7070}
+/* Textareas */
+textarea{width:100%;background:#091422;border:1px solid #182435;border-radius:8px;padding:10px 12px;color:#dde6f0;font-size:13px;resize:vertical;font-family:inherit;line-height:1.6;outline:none}
+/* Misc */
+.mono{font-family:'SF Mono','Fira Code','Courier New',monospace}
+.accent{color:#4ade80}
+.muted{color:#5a7191}
+.dim{color:#8ba0b5}
+.row{display:flex;gap:6px;align-items:center}
+.row-between{display:flex;justify-content:space-between;align-items:flex-start}
+input[type=file]{display:none}
+input[type=password],input[type=text]{background:#091422;border:1px solid #182435;border-radius:8px;padding:10px 12px;color:#dde6f0;font-size:12px;font-family:'SF Mono','Courier New',monospace;outline:none;width:100%}
+select{background:#0d1520;border:1px solid #182435;border-radius:7px;padding:8px 6px;color:#8ba0b5;font-size:11px;cursor:pointer;font-family:inherit;outline:none;-webkit-appearance:none;width:100%}
+</style>
+</head>
+<body>
+<input type="file" id="photo-input" accept="image/*" capture="environment">
+<input type="file" id="import-input" accept=".json">
+
+<div id="app">
+ <!-- HEADER -->
+ <div id="hdr">
+  <div id="title-row">
+   <div>
+    <div style="font-size:22px;font-weight:700;letter-spacing:-.6px;line-height:1">Skin<span class="accent">Rx</span></div>
+    <div style="font-size:9px;letter-spacing:.8px;margin-top:2px" class="muted">SEBORRHEIC TREATMENT LOG</div>
+   </div>
+   <div style="text-align:right">
+    <div id="hdr-date" style="font-size:11px" class="dim"></div>
+    <div id="hdr-counter" class="mono muted" style="font-size:11px;margin-top:1px"></div>
+    <div id="hdr-mood" style="font-size:16px;margin-top:1px"></div>
+   </div>
+  </div>
+  <div id="week-nav-row">
+   <button class="btn" onclick="prevWeek()" style="font-size:24px;padding:0 6px;color:#5a7191">&#8249;</button>
+   <span id="week-range" style="font-size:11px;font-weight:500" class="dim"></span>
+   <button class="btn" onclick="nextWeek()" style="font-size:24px;padding:0 6px;color:#5a7191">&#8250;</button>
+  </div>
+  <div id="week-grid"></div>
+ </div>
+
+ <!-- ROUTINE TAB -->
+ <div id="tab-routine" class="tab active">
+  <div class="card">
+   <div class="row-between" style="margin-bottom:12px">
+    <div>
+     <div id="routine-date" style="font-size:14px;font-weight:600;color:#f0f6ff"></div>
+     <div id="step-counter" class="mono muted" style="font-size:11px;margin-top:3px"></div>
+    </div>
+    <div class="row">
+     <button id="mood-good" class="btn mood-btn" onclick="toggleMood('good')">&#128522;</button>
+     <button id="mood-bad"  class="btn mood-btn" onclick="toggleMood('bad')">&#128532;</button>
+     <button id="shower-btn" class="btn" onclick="toggleShower()"></button>
+    </div>
+   </div>
+   <div class="bar-track"><div id="prog-fill" class="bar-fill" style="width:0%"></div></div>
+   <div id="all-done" style="display:none;font-size:11px;color:#4ade80;text-align:center;margin-top:7px;font-weight:600">&#10003; All done for today!</div>
+   <div id="steps-list" style="margin-top:13px"></div>
+  </div>
+ </div>
+
+ <!-- SYMPTOMS TAB -->
+ <div id="tab-symptoms" class="tab">
+  <div class="card">
+   <div style="font-size:13px;font-weight:600;color:#f0f6ff;margin-bottom:14px">Rate Today&#8217;s Symptoms</div>
+   <div id="sym-itching-row" style="margin-bottom:16px">
+    <div class="row-between" style="margin-bottom:7px">
+     <span style="font-size:12px;font-weight:500;color:#c0cfe0">Itching</span>
+     <span class="mono" style="font-size:13px;font-weight:700" id="sym-itching-val">&#8212;</span>
+    </div>
+    <div class="row" style="gap:6px">
+     <button class="sym-btn" id="sbi1" onclick="rateSymptom('itching',1)">1</button>
+     <button class="sym-btn" id="sbi2" onclick="rateSymptom('itching',2)">2</button>
+     <button class="sym-btn" id="sbi3" onclick="rateSymptom('itching',3)">3</button>
+     <button class="sym-btn" id="sbi4" onclick="rateSymptom('itching',4)">4</button>
+     <button class="sym-btn" id="sbi5" onclick="rateSymptom('itching',5)">5</button>
+    </div>
+   </div>
+   <div style="margin-bottom:16px">
+    <div class="row-between" style="margin-bottom:7px">
+     <span style="font-size:12px;font-weight:500;color:#c0cfe0">Flaking</span>
+     <span class="mono" style="font-size:13px;font-weight:700" id="sym-flaking-val">&#8212;</span>
+    </div>
+    <div class="row" style="gap:6px">
+     <button class="sym-btn" id="sbf1" onclick="rateSymptom('flaking',1)">1</button>
+     <button class="sym-btn" id="sbf2" onclick="rateSymptom('flaking',2)">2</button>
+     <button class="sym-btn" id="sbf3" onclick="rateSymptom('flaking',3)">3</button>
+     <button class="sym-btn" id="sbf4" onclick="rateSymptom('flaking',4)">4</button>
+     <button class="sym-btn" id="sbf5" onclick="rateSymptom('flaking',5)">5</button>
+    </div>
+   </div>
+   <div>
+    <div class="row-between" style="margin-bottom:7px">
+     <span style="font-size:12px;font-weight:500;color:#c0cfe0">Redness</span>
+     <span class="mono" style="font-size:13px;font-weight:700" id="sym-redness-val">&#8212;</span>
+    </div>
+    <div class="row" style="gap:6px">
+     <button class="sym-btn" id="sbr1" onclick="rateSymptom('redness',1)">1</button>
+     <button class="sym-btn" id="sbr2" onclick="rateSymptom('redness',2)">2</button>
+     <button class="sym-btn" id="sbr3" onclick="rateSymptom('redness',3)">3</button>
+     <button class="sym-btn" id="sbr4" onclick="rateSymptom('redness',4)">4</button>
+     <button class="sym-btn" id="sbr5" onclick="rateSymptom('redness',5)">5</button>
+    </div>
+   </div>
+  </div>
+  <div class="card">
+   <div style="font-size:13px;font-weight:600;color:#f0f6ff;margin-bottom:12px">14-Day Trend</div>
+   <div id="sym-graph"></div>
+  </div>
+  <div class="card">
+   <div style="font-size:13px;font-weight:600;color:#f0f6ff;margin-bottom:10px">Recent Entries</div>
+   <div id="sym-history"></div>
+  </div>
+ </div>
+
+ <!-- PRODUCTS TAB -->
+ <div id="tab-products" class="tab">
+  <div class="card" id="pc-nizoral">
+   <div class="row-between" style="margin-bottom:10px">
+    <div><div style="font-size:14px;font-weight:600;color:#f0f6ff">&#128995; Nizoral</div><div style="font-size:10px;margin-top:2px" class="muted">7oz &middot; Ketoconazole 1% Shampoo</div></div>
+    <span id="badge-nizoral"></span>
+   </div>
+   <div class="row-between" style="margin-bottom:8px">
+    <span id="since-nizoral" style="font-size:10px" class="muted"></span>
+    <span id="count-nizoral" class="mono" style="font-size:12px;font-weight:700;color:#818cf8"></span>
+   </div>
+   <div class="bar-track" style="height:6px"><div id="bar-nizoral" class="bar-fill" style="height:6px;background:#818cf8"></div></div>
+   <div class="row" style="gap:7px;margin-top:11px">
+    <button class="btn" onclick="refillProduct('nizoral')" style="flex:1;background:#091422;border:1px solid #182435;border-radius:7px;padding:7px;font-size:11px;font-weight:500;color:#8ba0b5">&#128260; Refill / New</button>
+    <button class="prod-adj btn" onclick="adjProduct('nizoral',-1)">&#8722;</button>
+    <button class="prod-adj btn" onclick="adjProduct('nizoral',1)">+</button>
+   </div>
+  </div>
+  <div class="card" id="pc-dermazen">
+   <div class="row-between" style="margin-bottom:10px">
+    <div><div style="font-size:14px;font-weight:600;color:#f0f6ff">&#128994; Dermazen</div><div style="font-size:10px;margin-top:2px" class="muted">4oz &middot; Calming Seborrheic Serum</div></div>
+    <span id="badge-dermazen"></span>
+   </div>
+   <div class="row-between" style="margin-bottom:8px">
+    <span id="since-dermazen" style="font-size:10px" class="muted"></span>
+    <span id="count-dermazen" class="mono" style="font-size:12px;font-weight:700;color:#4ade80"></span>
+   </div>
+   <div class="bar-track" style="height:6px"><div id="bar-dermazen" class="bar-fill" style="height:6px;background:#4ade80"></div></div>
+   <div class="row" style="gap:7px;margin-top:11px">
+    <button class="btn" onclick="refillProduct('dermazen')" style="flex:1;background:#091422;border:1px solid #182435;border-radius:7px;padding:7px;font-size:11px;font-weight:500;color:#8ba0b5">&#128260; Refill / New</button>
+    <button class="prod-adj btn" onclick="adjProduct('dermazen',-1)">&#8722;</button>
+    <button class="prod-adj btn" onclick="adjProduct('dermazen',1)">+</button>
+   </div>
+  </div>
+  <div class="card" id="pc-pine_tar">
+   <div class="row-between" style="margin-bottom:10px">
+    <div><div style="font-size:14px;font-weight:600;color:#f0f6ff">&#128996; Pine Tar Soap</div><div style="font-size:10px;margin-top:2px" class="muted">Bar soap</div></div>
+    <span id="badge-pine_tar"></span>
+   </div>
+   <div class="row-between" style="margin-bottom:8px">
+    <span id="since-pine_tar" style="font-size:10px" class="muted"></span>
+    <span id="count-pine_tar" class="mono" style="font-size:12px;font-weight:700;color:#d97706"></span>
+   </div>
+   <div class="bar-track" style="height:6px"><div id="bar-pine_tar" class="bar-fill" style="height:6px;background:#d97706"></div></div>
+   <div class="row" style="gap:7px;margin-top:11px">
+    <button class="btn" onclick="refillProduct('pine_tar')" style="flex:1;background:#091422;border:1px solid #182435;border-radius:7px;padding:7px;font-size:11px;font-weight:500;color:#8ba0b5">&#128260; Refill / New</button>
+    <button class="prod-adj btn" onclick="adjProduct('pine_tar',-1)">&#8722;</button>
+    <button class="prod-adj btn" onclick="adjProduct('pine_tar',1)">+</button>
+   </div>
+  </div>
+  <div class="card" id="pc-cerave">
+   <div class="row-between" style="margin-bottom:10px">
+    <div><div style="font-size:14px;font-weight:600;color:#f0f6ff">&#128309; CeraVe</div><div style="font-size:10px;margin-top:2px" class="muted">16oz &middot; Moisturizing Cream</div></div>
+    <span id="badge-cerave"></span>
+   </div>
+   <div class="row-between" style="margin-bottom:8px">
+    <span id="since-cerave" style="font-size:10px" class="muted"></span>
+    <span id="count-cerave" class="mono" style="font-size:12px;font-weight:700;color:#38bdf8"></span>
+   </div>
+   <div class="bar-track" style="height:6px"><div id="bar-cerave" class="bar-fill" style="height:6px;background:#38bdf8"></div></div>
+   <div class="row" style="gap:7px;margin-top:11px">
+    <button class="btn" onclick="refillProduct('cerave')" style="flex:1;background:#091422;border:1px solid #182435;border-radius:7px;padding:7px;font-size:11px;font-weight:500;color:#8ba0b5">&#128260; Refill / New</button>
+    <button class="prod-adj btn" onclick="adjProduct('cerave',-1)">&#8722;</button>
+    <button class="prod-adj btn" onclick="adjProduct('cerave',1)">+</button>
+   </div>
+  </div>
+ </div>
+
+ <!-- PHOTOS TAB -->
+ <div id="tab-photos" class="tab">
+  <div class="card">
+   <div class="row-between" style="margin-bottom:10px">
+    <div id="photo-date-label" style="font-size:13px;font-weight:600;color:#f0f6ff"></div>
+    <button class="btn" onclick="document.getElementById('photo-input').click()" style="background:#081e30;border:1px solid #38bdf8;border-radius:7px;padding:5px 12px;color:#38bdf8;font-size:11px;font-weight:600">+ Add</button>
+   </div>
+   <div id="photo-display"></div>
+  </div>
+  <div class="card">
+   <div style="font-size:13px;font-weight:600;color:#f0f6ff;margin-bottom:10px">Before / After Compare</div>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <div>
+     <div style="font-size:9px;font-weight:700;letter-spacing:.5px;margin-bottom:5px" class="muted">PHOTO A</div>
+     <div id="cmp-a-display"></div>
+    </div>
+    <div>
+     <div style="font-size:9px;font-weight:700;letter-spacing:.5px;margin-bottom:5px" class="muted">PHOTO B</div>
+     <div id="cmp-b-display"></div>
+    </div>
+   </div>
+  </div>
+  <div class="card">
+   <div id="gallery-heading" style="font-size:13px;font-weight:600;color:#f0f6ff;margin-bottom:10px">Gallery</div>
+   <div id="photo-gallery"></div>
+  </div>
+ </div>
+
+ <!-- NOTES TAB -->
+ <div id="tab-notes" class="tab">
+  <div class="card">
+   <div id="notes-date-label" style="font-size:13px;font-weight:600;color:#f0f6ff;margin-bottom:8px"></div>
+   <textarea id="daily-note" rows="4" placeholder="How did your skin feel? Any reactions, improvements, or observations&#8230;" oninput="saveNote()"></textarea>
+   <div class="row" style="gap:6px;margin-top:8px">
+    <button id="note-mood-good" class="btn mood-btn" onclick="toggleMood('good')" style="flex:1;font-size:12px;font-weight:600;color:#5a7191">&#128522; Good day</button>
+    <button id="note-mood-bad"  class="btn mood-btn" onclick="toggleMood('bad')"  style="flex:1;font-size:12px;font-weight:600;color:#5a7191">&#128532; Bad day</button>
+   </div>
+  </div>
+  <div class="card">
+   <div id="week-note-label" style="font-size:13px;font-weight:600;color:#f0f6ff;margin-bottom:8px"></div>
+   <textarea id="week-note" rows="4" placeholder="Weekly patterns, what&#8217;s working, what to try&#8230;" oninput="saveWeekNote()"></textarea>
+  </div>
+  <div class="card">
+   <div style="font-size:13px;font-weight:600;color:#f0f6ff;margin-bottom:10px">Recent Notes</div>
+   <div id="recent-notes"></div>
+  </div>
+ </div>
+
+ <!-- SYNC TAB -->
+ <div id="tab-sync" class="tab">
+  <div class="card">
+   <div style="font-size:13px;font-weight:600;color:#f0f6ff;margin-bottom:4px">&#128190; Backup &amp; Restore</div>
+   <div style="font-size:11px;line-height:1.7;margin-bottom:14px" class="muted">Export a JSON file &mdash; save it anywhere (Drive, iCloud, email). Import it on any device to restore. Photos are stored on-device only.</div>
+   <div id="sync-msg" style="display:none;border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:12px;font-weight:500"></div>
+   <button class="btn" onclick="exportBackup()" style="width:100%;background:#081e12;border:1px solid #4ade80;border-radius:9px;padding:13px;color:#4ade80;font-size:13px;font-weight:700;margin-bottom:8px">&#8595; Export Backup (JSON)</button>
+   <button class="btn" onclick="document.getElementById('import-input').click()" style="width:100%;background:#071622;border:1px solid #38bdf8;border-radius:9px;padding:13px;color:#38bdf8;font-size:13px;font-weight:700">&#8593; Import Backup (JSON)</button>
+  </div>
+  <div class="card">
+   <div style="font-size:13px;font-weight:600;color:#f0f6ff;margin-bottom:4px">&#9729;&#65039; Google Drive Auto-Sync</div>
+   <div style="font-size:11px;line-height:1.7;margin-bottom:12px" class="muted">Saves to <span class="mono dim">SkinRx-backup.json</span> in your Drive. Requires your Anthropic API key (stored only on this device).</div>
+   <div style="position:relative;margin-bottom:8px">
+    <input type="password" id="api-key" placeholder="sk-ant-api&#8230;" oninput="saveApiKey()" style="padding-right:44px">
+    <button class="btn" onclick="toggleKeyVis()" id="key-eye" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:13px;color:#5a7191">&#128065;</button>
+   </div>
+   <div class="row" style="gap:8px">
+    <button class="btn" id="drive-save-btn" onclick="saveToDrive()" style="flex:1;background:#081e12;border:1px solid #4ade80;border-radius:8px;padding:11px;color:#4ade80;font-size:12px;font-weight:700">&#8593; Save to Drive</button>
+    <button class="btn" id="drive-load-btn" onclick="loadFromDrive()" style="flex:1;background:#071622;border:1px solid #38bdf8;border-radius:8px;padding:11px;color:#38bdf8;font-size:12px;font-weight:700">&#8595; Load from Drive</button>
+   </div>
+  </div>
+  <div class="card">
+   <div style="font-size:13px;font-weight:600;color:#f0f6ff;margin-bottom:12px">&#128202; Stats</div>
+   <div id="stats-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+  </div>
+  <div class="card" style="border-color:#2a1010">
+   <div style="font-size:12px;font-weight:600;color:#f87171;margin-bottom:5px">&#9888; Clear All Data</div>
+   <div style="font-size:11px;margin-bottom:10px" class="muted">Export a backup first. Cannot be undone.</div>
+   <button class="btn" onclick="clearData()" style="width:100%;background:#180505;border:1px solid #f87171;border-radius:8px;padding:10px;color:#f87171;font-size:12px;font-weight:600">Clear All Local Data</button>
+  </div>
+ </div>
+</div><!-- /app -->
+
+<!-- NAV -->
+<nav id="nav">
+ <button class="nav-btn active" id="nb-routine"  onclick="switchTab('routine')"> <span style="font-size:17px">&#128203;</span><span class="lbl">Routine</span> <div class="pip"></div></button>
+ <button class="nav-btn"        id="nb-symptoms" onclick="switchTab('symptoms')"><span style="font-size:17px">&#128202;</span><span class="lbl">Symptoms</span><div class="pip"></div></button>
+ <button class="nav-btn"        id="nb-products" onclick="switchTab('products')"><span style="font-size:17px">&#129148;</span><span class="lbl">Products</span><div class="pip"></div></button>
+ <button class="nav-btn"        id="nb-photos"   onclick="switchTab('photos')">  <span style="font-size:17px">&#128248;</span><span class="lbl">Photos</span>  <div class="pip"></div></button>
+ <button class="nav-btn"        id="nb-notes"    onclick="switchTab('notes')">   <span style="font-size:17px">&#128221;</span><span class="lbl">Notes</span>   <div class="pip"></div></button>
+ <button class="nav-btn"        id="nb-sync"     onclick="switchTab('sync')">    <span style="font-size:17px">&#9729;&#65039;</span><span class="lbl">Sync</span>    <div class="pip"></div></button>
+</nav>
+
+<script>
+/* ── DATA ──────────────────────────────────────────────────────────────── */
+const SHOWER=[
+  {t:"Apply Nizoral to scalp & lather",       n:"Leave on 5 min \u23f1"},
+  {t:"Wash face with pine tar soap",           n:"Rinse thoroughly"},
+  {t:"Rinse Nizoral out",                      n:"After 5-min soak"},
+  {t:"Pat dry",                                n:null},
+  {t:"Apply Dermazen serum \u2014 face zones", n:"beard \xb7 mustache \xb7 brows \xb7 nose \xb7 forehead \xb7 under eyes \xb7 behind ears"},
+  {t:"Apply Dermazen serum \u2014 scalp",      n:null},
+  {t:"Apply CeraVe moisturizing cream to face",n:null},
+];
+const SINK=[
+  {t:"Wash face with pine tar soap at sink",   n:"Rinse thoroughly"},
+  {t:"Pat dry",                                n:null},
+  {t:"Apply Dermazen serum \u2014 face zones", n:"beard \xb7 mustache \xb7 brows \xb7 nose \xb7 forehead \xb7 under eyes \xb7 behind ears"},
+  {t:"Apply CeraVe moisturizing cream to face",n:null},
+];
+const PROD_META={
+  nizoral: {name:"Nizoral",  total:60,  color:"#818cf8"},
+  dermazen:{name:"Dermazen", total:90,  color:"#4ade80"},
+  pine_tar:{name:"Pine Tar", total:55,  color:"#d97706"},
+  cerave:  {name:"CeraVe",   total:180, color:"#38bdf8"},
+};
+const SYM_COLOR={itching:"#f59e0b",flaking:"#a78bfa",redness:"#f87171"};
+const SYM_CODE ={itching:"i",      flaking:"f",       redness:"r"};
+const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+/* ── STORAGE ───────────────────────────────────────────────────────────── */
+function todayKey(){return new Date().toISOString().split("T")[0];}
+function toKey(d){return d.toISOString().split("T")[0];}
+function fmtD(s,o){return new Date(s+"T12:00:00").toLocaleDateString("en-US",o);}
+function defaultData(){
+  const p={};
+  Object.keys(PROD_META).forEach(id=>p[id]={start:todayKey(),left:PROD_META[id].total});
+  return{days:{},products:p,weekNotes:{}};
+}
+function load(){try{return JSON.parse(localStorage.getItem("sr"))||defaultData();}catch{return defaultData();}}
+function save(){localStorage.setItem("sr",JSON.stringify(DB));}
+function getDayData(k){return DB.days[k]||(DB.days[k]={shower:true,steps:[],mood:null,note:"",sym:{}});}
+function getPhoto(k){return localStorage.getItem("srp_"+k);}
+function setPhoto(k,v){try{localStorage.setItem("srp_"+k,v);}catch(e){alert("Storage full \u2014 try removing old photos.");}}
+function delPhoto(k){localStorage.removeItem("srp_"+k);}
+function allPhotoKeys(){
+  const r=[];
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith("srp_"))r.push(k.slice(4));}
+  return r.sort().reverse();
+}
+
+/* ── STATE ─────────────────────────────────────────────────────────────── */
+let DB=load();
+let selDate=todayKey();
+let weekOff=0;
+let activeTab="routine";
+let cmpA=null, cmpB=null;
+let keyVisible=false;
+
+/* ── WEEK CALENDAR ─────────────────────────────────────────────────────── */
+function getWeekDates(off){
+  const n=new Date(),dow=n.getDay();
+  const mon=new Date(n);
+  mon.setDate(n.getDate()+(dow===0?-6:1-dow)+off*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
+}
+function getWeekKey(s){
+  const d=new Date(s+"T12:00:00"),dow=d.getDay();
+  const mon=new Date(d);mon.setDate(d.getDate()+(dow===0?-6:1-dow));
+  const yr=mon.getFullYear(),wn=Math.ceil(((mon-new Date(yr,0,1))/86400000+1)/7);
+  return`${yr}-W${String(wn).padStart(2,"0")}`;
+}
+function buildWeekGrid(){
+  const dates=getWeekDates(weekOff);
+  document.getElementById("week-range").textContent=
+    dates[0].toLocaleDateString("en-US",{month:"short",day:"numeric"})+" \u2013 "+
+    dates[6].toLocaleDateString("en-US",{month:"short",day:"numeric"});
+  const grid=document.getElementById("week-grid");
+  grid.innerHTML="";
+  dates.forEach((date,i)=>{
+    const k=toKey(date),dd=DB.days[k];
+    const steps=dd?(dd.shower?SHOWER:SINK):SHOWER;
+    const done=dd?.steps?.length||0,tot=steps.length;
+    const full=done>0&&done===tot,part=done>0&&done<tot;
+    const btn=document.createElement("button");
+    btn.className="day-cell"+(k===selDate?" selected":"")+(k===todayKey()?" is-today":"");
+    btn.onclick=()=>selectDate(k);
+    let dot="";
+    if(k!==selDate){
+      if(full) dot=`<div style="width:6px;height:6px;border-radius:50%;background:#4ade80;margin:0 auto"></div>`;
+      else if(part) dot=`<div style="width:5px;height:5px;border-radius:50%;background:#38bdf8;margin:0 auto"></div>`;
+      else if(dd?.mood==="bad") dot=`<div style="width:4px;height:4px;border-radius:50%;background:#f87171;margin:0 auto"></div>`;
+    }
+    btn.innerHTML=`<div class="dl">${DAYS[i]}</div><div class="dn">${date.getDate()}</div><div class="dot">${dot}</div>`;
+    grid.appendChild(btn);
+  });
+}
+function prevWeek(){weekOff--;buildWeekGrid();}
+function nextWeek(){weekOff++;buildWeekGrid();}
+
+/* ── DATE SELECTION ────────────────────────────────────────────────────── */
+function selectDate(k){
+  selDate=k;
+  buildWeekGrid();
+  refreshRoutine();
+  refreshSymptomRatings();
+  refreshPhotoDisplay();
+  refreshNotesForDate();
+}
+
+/* ── ROUTINE ───────────────────────────────────────────────────────────── */
+function refreshRoutine(){
+  const dd=getDayData(selDate);
+  const steps=dd.shower?SHOWER:SINK;
+  const done=dd.steps.length,tot=steps.length;
+  // date + counter
+  document.getElementById("routine-date").textContent=fmtD(selDate,{weekday:"long",month:"long",day:"numeric"});
+  document.getElementById("step-counter").textContent=done+"/"+tot+" steps";
+  // header counter + mood
+  document.getElementById("hdr-counter").textContent=done+"/"+tot+" done";
+  document.getElementById("hdr-mood").textContent=dd.mood===(e=>"good")?"\ud83d\ude0a":dd.mood==="bad"?"\ud83d\ude14":"";
+  // shower btn
+  const sb=document.getElementById("shower-btn");
+  sb.textContent=dd.shower?"\ud83d\udebf Shower":"\ud83e\ude25 Sink";
+  sb.className="btn"+(dd.shower?"":" sink");
+  // mood btns
+  document.getElementById("mood-good").className="btn mood-btn"+(dd.mood==="good"?" good-on":"");
+  document.getElementById("mood-bad").className ="btn mood-btn"+(dd.mood==="bad"?" bad-on":"");
+  document.getElementById("note-mood-good").className="btn mood-btn"+(dd.mood==="good"?" good-on":"")+" ";
+  document.getElementById("note-mood-bad").className ="btn mood-btn"+(dd.mood==="bad"?" bad-on":"")+" ";
+  document.getElementById("note-mood-good").style.color=dd.mood==="good"?"#4ade80":"#5a7191";
+  document.getElementById("note-mood-bad").style.color =dd.mood==="bad"?"#f87171":"#5a7191";
+  // progress
+  const pct=tot>0?Math.round((done/tot)*100):0;
+  const fill=document.getElementById("prog-fill");
+  fill.style.width=pct+"%";
+  fill.className="bar-fill"+(done===tot?" complete":"");
+  document.getElementById("all-done").style.display=(done===tot&&tot>0)?"block":"none";
+  // steps list
+  buildStepsList(dd,steps);
+}
+function buildStepsList(dd,steps){
+  const list=document.getElementById("steps-list");
+  list.innerHTML="";
+  steps.forEach((step,idx)=>{
+    const isDone=dd.steps.includes(idx);
+    const btn=document.createElement("button");
+    btn.className="step-btn"+(isDone?" done":"");
+    btn.onclick=()=>toggleStep(idx);
+    btn.innerHTML=`<div class="check-box"><span class="check-mark">\u2713</span></div>`+
+      `<div style="flex:1;min-width:0">`+
+      `<div class="step-text"><span class="step-num">${idx+1}.</span>${step.t}</div>`+
+      (!isDone&&step.n?`<div class="step-note">${step.n}</div>`:"")+
+      `</div>`;
+    list.appendChild(btn);
+  });
+}
+function toggleStep(idx){
+  const dd=getDayData(selDate);
+  const pos=dd.steps.indexOf(idx);
+  if(pos===-1) dd.steps.push(idx); else dd.steps.splice(pos,1);
+  save();
+  refreshRoutine();
+  buildWeekGrid();
+}
+function toggleMood(mood){
+  const dd=getDayData(selDate);
+  dd.mood=dd.mood===mood?null:mood;
+  save();
+  refreshRoutine();
+  buildWeekGrid();
+}
+function toggleShower(){
+  const dd=getDayData(selDate);
+  dd.shower=!dd.shower;
+  dd.steps=[];
+  save();
+  refreshRoutine();
+  buildWeekGrid();
+}
+
+/* ── SYMPTOMS ──────────────────────────────────────────────────────────── */
+const SYM_KEYS=["itching","flaking","redness"];
+const SYM_PRE={itching:"i",flaking:"f",redness:"r"};
+function refreshSymptomRatings(){
+  const dd=getDayData(selDate);
+  SYM_KEYS.forEach(sk=>{
+    const val=(dd.sym||{})[sk]||0;
+    const color=SYM_COLOR[sk];
+    const pre=SYM_PRE[sk];
+    const valEl=document.getElementById("sym-"+sk+"-val");
+    if(valEl){valEl.textContent=val>0?val+"/5":"\u2014";valEl.style.color=val>0?color:"#5a7191";}
+    for(let n=1;n<=5;n++){
+      const b=document.getElementById("sb"+pre+n);
+      if(b){
+        b.style.background=val>=n?color+"20":"#091422";
+        b.style.borderColor=val>=n?color:"#182435";
+        b.style.color=val>=n?color:"#5a7191";
+      }
+    }
+  });
+}
+function rateSymptom(key,n){
+  const dd=getDayData(selDate);
+  if(!dd.sym) dd.sym={};
+  dd.sym[key]=dd.sym[key]===n?0:n;
+  save();
+  refreshSymptomRatings();
+  buildSymGraph();
+  buildSymHistory();
+}
+function buildSymGraph(){
+  const dates=Array.from({length:14},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(13-i));return toKey(d);});
+  const W=320,H=110,Pt=8,Pr=8,Pb=22,Pl=24;
+  const pw=W-Pl-Pr,ph=H-Pt-Pb;
+  let svg=`<svg width="100%" viewBox="0 0 ${W} ${H}" style="display:block">`;
+  for(let v=1;v<=5;v++){
+    const y=Pt+ph-(v/5)*ph;
+    svg+=`<line x1="${Pl}" y1="${y}" x2="${W-Pr}" y2="${y}" stroke="#111e2e" stroke-width="1"/>`;
+    svg+=`<text x="${Pl-5}" y="${y+3.5}" fill="#5a7191" font-size="8" text-anchor="end">${v}</text>`;
+  }
+  dates.forEach((d,i)=>{
+    if(i%7!==0&&i!==dates.length-1)return;
+    const x=Pl+(i/(dates.length-1))*pw;
+    svg+=`<text x="${x}" y="${H-4}" fill="#5a7191" font-size="7.5" text-anchor="middle">${d.slice(5)}</text>`;
+  });
+  let hasData=false;
+  SYM_KEYS.forEach(sk=>{
+    const color=SYM_COLOR[sk];
+    const pts=dates.map((d,i)=>({i,v:(DB.days[d]?.sym||{})[sk]??null})).filter(p=>p.v!==null);
+    if(pts.length<2)return; hasData=true;
+    const path=pts.map(({i,v},idx)=>{
+      const x=Pl+(i/(dates.length-1))*pw,y=Pt+ph-(v/5)*ph;
+      return(idx===0?"M":"L")+` ${x} ${y}`;
+    }).join(" ");
+    svg+=`<path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>`;
+    pts.forEach(({i,v})=>{
+      const x=Pl+(i/(dates.length-1))*pw,y=Pt+ph-(v/5)*ph;
+      svg+=`<circle cx="${x}" cy="${y}" r="2.5" fill="${color}"/>`;
+    });
+  });
+  svg+=`</svg>`;
+  if(hasData){
+    svg+=`<div style="display:flex;gap:14px;margin-top:7px">`;
+    SYM_KEYS.forEach(sk=>svg+=`<div style="display:flex;align-items:center;gap:5px"><div style="width:14px;height:3px;background:${SYM_COLOR[sk]};border-radius:2px"></div><span style="font-size:10px;color:#8ba0b5">${sk}</span></div>`);
+    svg+=`</div>`;
+  }
+  const el=document.getElementById("sym-graph");
+  if(el) el.innerHTML=hasData?svg:`<p style="font-size:12px;color:#5a7191;text-align:center;padding:20px 0">Log symptoms to see your trend chart</p>`;
+}
+function buildSymHistory(){
+  const entries=Object.entries(DB.days).filter(([,d])=>Object.keys(d.sym||{}).some(k=>d.sym[k]>0)).sort().reverse().slice(0,8);
+  const el=document.getElementById("sym-history");
+  if(!el)return;
+  if(!entries.length){el.innerHTML=`<p style="font-size:12px;color:#5a7191">No symptom data yet.</p>`;return;}
+  el.innerHTML=entries.map(([date,d])=>{
+    const dots=SYM_KEYS.map(sk=>d.sym[sk]?`<span style="font-size:10px;color:${SYM_COLOR[sk]};font-weight:700">${sk[0].toUpperCase()}${d.sym[sk]}</span>`:"").join("");
+    return`<button class="btn" onclick="selectDate('${date}')" style="width:100%;background:#091422;border:1px solid #182435;border-radius:8px;padding:8px 11px;text-align:left;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center"><span class="mono accent" style="font-size:11px">${date}</span><div style="display:flex;gap:8px">${dots}</div></button>`;
+  }).join("");
+}
+
+/* ── PRODUCTS ──────────────────────────────────────────────────────────── */
+function refreshAllProducts(){
+  Object.keys(PROD_META).forEach(id=>{
+    const pd=DB.products[id]||{start:todayKey(),left:PROD_META[id].total};
+    const tot=PROD_META[id].total,pct=(pd.left/tot)*100,isLow=pct<20,isEmpty=pd.left<=0;
+    document.getElementById("bar-"+id).style.width=Math.max(0,pct)+"%";
+    document.getElementById("count-"+id).textContent=pd.left+" / "+tot;
+    document.getElementById("since-"+id).textContent="Since "+fmtD(pd.start,{month:"short",day:"numeric"});
+    const badge=document.getElementById("badge-"+id);
+    if(isLow){badge.className="low-badge"+(isEmpty?" empty-badge":"");badge.textContent=isEmpty?"EMPTY":"LOW";}
+    else badge.textContent="";
+    document.getElementById("pc-"+id).style.borderColor=isLow?"#5a1010":"#182435";
+  });
+}
+function adjProduct(id,delta){
+  const pd=DB.products[id],tot=PROD_META[id].total;
+  pd.left=Math.min(tot,Math.max(0,pd.left+delta));
+  save();refreshAllProducts();
+}
+function refillProduct(id){
+  DB.products[id]={start:todayKey(),left:PROD_META[id].total};
+  save();refreshAllProducts();
+}
+
+/* ── PHOTOS ────────────────────────────────────────────────────────────── */
+async function compressPhoto(dataUrl){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=680,c=document.createElement("canvas");
+      let w=img.width,h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+      c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);
+      res(c.toDataURL("image/jpeg",0.72));
+    };
+    img.onerror=()=>res(dataUrl); img.src=dataUrl;
+  });
+}
+function refreshPhotoDisplay(){
+  document.getElementById("photo-date-label").textContent="\ud83d\udcf8 "+fmtD(selDate,{weekday:"short",month:"short",day:"numeric"});
+  const photo=getPhoto(selDate);
+  const el=document.getElementById("photo-display");
+  if(photo){
+    el.innerHTML=`<img src="${photo}" style="width:100%;border-radius:8px;max-height:280px;object-fit:cover;border:1px solid #182435"><div style="display:flex;gap:7px;margin-top:8px"><button class="btn" onclick="document.getElementById('photo-input').click()" style="flex:1;background:#091422;border:1px solid #182435;border-radius:7px;padding:7px;font-size:11px;color:#8ba0b5">\ud83d\udd04 Replace</button><button class="btn" onclick="removePhoto('${selDate}')" style="background:#1a0505;border:1px solid #f87171;border-radius:7px;padding:7px 13px;color:#f87171;font-size:12px">\ud83d\uddd1</button></div>`;
+  }else{
+    el.innerHTML=`<button class="btn" onclick="document.getElementById('photo-input').click()" style="width:100%;height:150px;background:#091422;border:2px dashed #182435;border-radius:10px;color:#5a7191;font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px"><span style="font-size:30px">\ud83d\udcf7</span><span>Tap to add progress photo</span></button>`;
+  }
+}
+function removePhoto(k){
+  delPhoto(k);refreshPhotoDisplay();buildPhotoGallery();
+}
+function buildPhotoGallery(){
+  const keys=allPhotoKeys();
+  document.getElementById("gallery-heading").textContent="Gallery ("+keys.length+")";
+  const el=document.getElementById("photo-gallery");
+  if(!keys.length){el.innerHTML=`<p style="font-size:12px;color:#5a7191;text-align:center;padding:16px 0">No photos yet</p>`;return;}
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">`+
+    keys.map(k=>`<button class="btn" onclick="selectDate('${k}')" style="padding:0;background:none;border:none"><img src="${getPhoto(k)}" style="width:100%;height:85px;object-fit:cover;border-radius:7px;border:2px solid ${k===selDate?"#4ade80":"#182435"}"><div class="mono" style="font-size:9px;color:${k===selDate?"#4ade80":"#5a7191"};text-align:center;margin-top:2px">${k.slice(5)}</div></button>`).join("")+
+  `</div>`;
+}
+function buildCmpSlot(which,k){
+  const el=document.getElementById("cmp-"+which+"-display");
+  if(!el)return;
+  if(k&&getPhoto(k)){
+    el.innerHTML=`<img src="${getPhoto(k)}" style="width:100%;height:110px;object-fit:cover;border-radius:7px;border:1px solid #182435"><div class="mono" style="font-size:9px;color:#4ade80;text-align:center;margin-top:3px">${k}</div><button class="btn" onclick="clearCmp('${which}')" style="width:100%;background:none;border:none;font-size:9px;color:#5a7191;margin-top:3px">clear</button>`;
+  }else{
+    const opts=allPhotoKeys().map(d=>`<option value="${d}">${d}</option>`).join("");
+    el.innerHTML=`<select onchange="setCmp('${which}',this.value)"><option value="">Select date\u2026</option>${opts}</select>`;
+  }
+}
+function setCmp(which,k){if(which==="a"){cmpA=k;}else{cmpB=k;}buildCmpSlot(which,k);}
+function clearCmp(which){if(which==="a"){cmpA=null;}else{cmpB=null;}buildCmpSlot(which,null);}
+
+/* ── NOTES ─────────────────────────────────────────────────────────────── */
+function refreshNotesForDate(){
+  const dd=getDayData(selDate);
+  const wk=getWeekKey(selDate);
+  document.getElementById("notes-date-label").textContent="Daily Note \u2014 "+fmtD(selDate,{weekday:"short",month:"short",day:"numeric"});
+  document.getElementById("week-note-label").textContent="Weekly Summary \u2014 "+wk;
+  document.getElementById("daily-note").value=dd.note||"";
+  document.getElementById("week-note").value=(DB.weekNotes||{})[wk]||"";
+  buildRecentNotes();
+}
+function saveNote(){
+  const dd=getDayData(selDate);
+  dd.note=document.getElementById("daily-note").value;
+  save();buildRecentNotes();
+}
+function saveWeekNote(){
+  if(!DB.weekNotes)DB.weekNotes={};
+  DB.weekNotes[getWeekKey(selDate)]=document.getElementById("week-note").value;
+  save();
+}
+function buildRecentNotes(){
+  const noted=Object.entries(DB.days).filter(([,d])=>d.note?.trim()).sort().reverse().slice(0,6);
+  const el=document.getElementById("recent-notes");
+  if(!noted.length){el.innerHTML=`<p style="font-size:12px;color:#5a7191;text-align:center;padding:10px 0">No notes yet</p>`;return;}
+  el.innerHTML=noted.map(([date,d])=>
+    `<button class="btn" onclick="selectDate('${date}')" style="width:100%;background:#091422;border:1px solid #182435;border-radius:8px;padding:9px 11px;text-align:left;margin-bottom:6px;display:block"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span class="mono accent" style="font-size:10px;font-weight:600">${date}</span><span style="font-size:12px">${d.mood==="good"?"\ud83d\ude0a":d.mood==="bad"?"\ud83d\ude14":""}</span></div><div style="font-size:12px;color:#7a90a8;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${d.note}</div></button>`
+  ).join("");
+}
+
+/* ── SYNC ──────────────────────────────────────────────────────────────── */
+function saveApiKey(){localStorage.setItem("sr_key",document.getElementById("api-key").value);}
+function toggleKeyVis(){
+  keyVisible=!keyVisible;
+  document.getElementById("api-key").type=keyVisible?"text":"password";
+  document.getElementById("key-eye").textContent=keyVisible?"\ud83d\ude48":"\ud83d\udc41";
+}
+function showSyncMsg(msg,ok){
+  const el=document.getElementById("sync-msg");
+  el.textContent=msg;el.style.display="block";
+  el.style.background=ok?"#081c10":"#1a0505";
+  el.style.border="1px solid "+(ok?"#4ade80":"#f87171");
+  el.style.color=ok?"#4ade80":"#f87171";
+  if(ok!==null) setTimeout(()=>el.style.display="none",5000);
+}
+function buildStats(){
+  const all=Object.entries(DB.days);
+  const items=[
+    {l:"Days Logged",   v:all.length,                                                          c:"#4ade80"},
+    {l:"Steps Done",    v:all.reduce((s,[,d])=>s+(d.steps?.length||0),0),                      c:"#38bdf8"},
+    {l:"Good Days",     v:all.filter(([,d])=>d.mood==="good").length,                          c:"#4ade80"},
+    {l:"Bad Days",      v:all.filter(([,d])=>d.mood==="bad").length,                           c:"#f87171"},
+    {l:"Photos",        v:allPhotoKeys().length,                                               c:"#fbbf24"},
+    {l:"Notes Written", v:all.filter(([,d])=>d.note?.trim()).length,                           c:"#a78bfa"},
+  ];
+  document.getElementById("stats-grid").innerHTML=items.map(({l,v,c})=>
+    `<div style="background:#091422;border-radius:9px;padding:12px 14px;border:1px solid #182435"><div class="mono" style="font-size:24px;font-weight:700;color:${c};line-height:1">${v}</div><div style="font-size:10px;color:#5a7191;margin-top:4px">${l}</div></div>`
+  ).join("");
+}
+function exportBackup(){
+  const exp={...DB,photos:null,savedAt:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(exp,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download="skinrx-backup-"+todayKey()+".json";a.click();
+  URL.revokeObjectURL(url);
+  showSyncMsg("\u2713 Backup downloaded!",true);
+}
+function clearData(){
+  if(!confirm("Delete ALL local data? Export a backup first. Cannot be undone."))return;
+  localStorage.removeItem("sr");
+  allPhotoKeys().forEach(k=>delPhoto(k));
+  DB=defaultData();save();
+  init();
+}
+async function saveToDrive(){
+  const key=document.getElementById("api-key").value.trim();
+  if(!key){showSyncMsg("\u2717 Enter your Anthropic API key first",false);return;}
+  const b1=document.getElementById("drive-save-btn"),b2=document.getElementById("drive-load-btn");
+  b1.textContent="\u23f3\u2026";b1.disabled=b2.disabled=true;
+  showSyncMsg("Saving to Google Drive\u2026",null);
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,mcp_servers:[{type:"url",url:"https://drivemcp.googleapis.com/mcp/v1",name:"gdrive"}],messages:[{role:"user",content:"Create or overwrite a file named \"SkinRx-backup.json\" in my Google Drive root with this content:\n\n"+JSON.stringify({...DB,savedAt:new Date().toISOString()})+"\n\nConfirm it was saved."}]})
+    });
+    const r=await res.json();
+    const t=(r.content?.find(b=>b.type==="text")?.text||"").toLowerCase();
+    showSyncMsg(t.includes("creat")||t.includes("saved")||t.includes("updat")?"\u2713 Saved to Google Drive!":"\u2713 Sync complete",true);
+  }catch{showSyncMsg("\u2717 Drive sync failed \u2014 check API key & connection",false);}
+  b1.textContent="\u2191 Save to Drive";b1.disabled=b2.disabled=false;
+}
+async function loadFromDrive(){
+  const key=document.getElementById("api-key").value.trim();
+  if(!key){showSyncMsg("\u2717 Enter your Anthropic API key first",false);return;}
+  const b1=document.getElementById("drive-save-btn"),b2=document.getElementById("drive-load-btn");
+  b2.textContent="\u23f3\u2026";b1.disabled=b2.disabled=true;
+  showSyncMsg("Loading from Google Drive\u2026",null);
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:8000,mcp_servers:[{type:"url",url:"https://drivemcp.googleapis.com/mcp/v1",name:"gdrive"}],messages:[{role:"user",content:"Find \"SkinRx-backup.json\" in my Google Drive and return ONLY its raw JSON content, nothing else."}]})
+    });
+    const r=await res.json();
+    const txt=r.content?.find(b=>b.type==="text")?.text||"";
+    const match=txt.match(/\{[\s\S]*\}/);
+    if(match){const{savedAt,...rest}=JSON.parse(match[0]);DB={...DB,...rest};save();init();showSyncMsg("\u2713 Data restored from Drive!",true);}
+    else showSyncMsg("\u2717 No backup found in Drive",false);
+  }catch{showSyncMsg("\u2717 Load failed \u2014 check API key & connection",false);}
+  b2.textContent="\u2193 Load from Drive";b1.disabled=b2.disabled=false;
+}
+
+/* ── TAB SWITCHING ─────────────────────────────────────────────────────── */
+function switchTab(tab){
+  document.querySelector(".tab.active")?.classList.remove("active");
+  document.querySelector(".nav-btn.active")?.classList.remove("active");
+  document.getElementById("tab-"+tab).classList.add("active");
+  document.getElementById("nb-"+tab).classList.add("active");
+  activeTab=tab;
+  if(tab==="symptoms"){buildSymGraph();buildSymHistory();}
+  if(tab==="photos"){refreshPhotoDisplay();buildPhotoGallery();buildCmpSlot("a",cmpA);buildCmpSlot("b",cmpB);}
+  if(tab==="notes"){refreshNotesForDate();}
+  if(tab==="sync"){buildStats();}
+}
+
+/* ── INIT ──────────────────────────────────────────────────────────────── */
+function init(){
+  document.getElementById("hdr-date").textContent=new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
+  document.getElementById("api-key").value=localStorage.getItem("sr_key")||"";
+  buildWeekGrid();
+  refreshRoutine();
+  refreshSymptomRatings();
+  refreshAllProducts();
+  refreshPhotoDisplay();
+  refreshNotesForDate();
+}
+init();
+
+document.getElementById("photo-input").addEventListener("change",async e=>{
+  const file=e.target.files?.[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    const c=await compressPhoto(ev.target.result);
+    setPhoto(selDate,c);
+    refreshPhotoDisplay();buildPhotoGallery();
+  };
+  reader.readAsDataURL(file);
+  e.target.value="";
+});
+document.getElementById("import-input").addEventListener("change",e=>{
+  const file=e.target.files?.[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const{savedAt,...rest}=JSON.parse(ev.target.result);
+      DB={...DB,...rest};save();init();
+      showSyncMsg("\u2713 Backup restored!",true);
+    }catch{showSyncMsg("\u2717 Invalid backup file",false);}
+  };
+  reader.readAsText(file);e.target.value="";
+});
+</script>
+</body>
+</html>

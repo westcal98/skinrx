@@ -615,6 +615,28 @@ document.getElementById("import-input").addEventListener("change",e=>{
   reader.readAsText(file);e.target.value="";
 });
 
+/* ── SWIPE NAVIGATION ────────────────────────────────────────────────────── */
+(function(){
+  const el=document.getElementById('tab-routine');
+  let sx=0,sy=0;
+  el.addEventListener('touchstart',e=>{
+    sx=e.touches[0].clientX;
+    sy=e.touches[0].clientY;
+  },{passive:true});
+  el.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-sx;
+    const dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)<40||Math.abs(dx)<=Math.abs(dy))return;
+    const dir=dx<0?1:-1;
+    const d=new Date(selDate+'T12:00:00');
+    d.setDate(d.getDate()+dir);
+    const newKey=toKey(d);
+    const weekKeys=getWeekDates(weekOff).map(wd=>toKey(wd));
+    if(!weekKeys.includes(newKey))weekOff+=dir;
+    selectDate(newKey);
+  },{passive:true});
+})();
+
 /* ── SERVICE WORKER ──────────────────────────────────────────────────────── */
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('/sw.js');
